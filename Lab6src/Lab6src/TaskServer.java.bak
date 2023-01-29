@@ -1,0 +1,89 @@
+import java.net.*;  
+import java.io.*;
+/**
+ * @author Rick Wightman
+ * December 2022.
+ */
+public class TaskServer {
+
+    /**
+     * TaskServer 
+     *      Currently this deals in a single string, but by
+     *      the end of the lab it should be a queue for Task objects.
+     *      The default port of 61340 can be altered by specifying it a 
+     *      command line argument (args[0]).
+     * 
+     * Usage: $ java TaskServer <port>
+     * 
+     * @param args
+     */
+    public static void main(String[] args){ 
+        ServerSocket ss = null;
+		// port number
+        int port = 61340;
+		// host name
+        String host = "localhost";
+        try{
+			// gets the host address
+            host = InetAddress.getLocalHost().getHostName();
+        }
+        catch(UnknownHostException e){
+            // Do nothing
+        }
+        if(args.length == 1){
+            try{
+                port = Integer.parseInt(args[0]);
+            }
+            catch(Exception e){
+                System.err.println("Cannot use "+args[0]+ "as a port number. Using default 61340.");
+            }
+        }
+        try{
+			// create an object ServerSocket using port
+            ss=new ServerSocket(61340);  
+        }
+        catch(Exception e){
+            System.out.println(e);
+            System.exit(1);
+        }
+        System.out.println("TaskServer started on "+host+":"+port);
+
+        Task newTask = null;
+		TaskQueue queue = new TaskQueue();
+		String message = null;
+        while(true){
+            try{
+                Socket s=ss.accept();//establishes connection   
+                ObjectInputStream ois=new ObjectInputStream(s.getInputStream());
+                ObjectOutputStream oos=new ObjectOutputStream(s.getOutputStream());
+                String  command=(String)ois.readObject();
+                switch(command){
+                    case "POST":
+						newTask = (Task)ois.readObject();
+						message = newTask.toString();
+						queue.enqueue(newTask);
+                        break;
+                    case "GET":
+                        try{
+							message = queue.dequeue().toString().toLowerCase();
+                        }
+						catch(EmptyQueueException e){
+							System.out.println("queue is empty");
+						}
+                        catch(Exception e){
+                            oos.writeObject(404);
+                            break;
+                        }
+                        oos.writeObject(200);
+                        oos.writeObject(message);  
+                        message = null;
+                        break;
+                }  
+                s.close();
+            }
+            catch(Exception e){
+                System.out.println(e);
+            } 
+        }  
+    }
+}
