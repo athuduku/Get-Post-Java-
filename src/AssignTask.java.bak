@@ -1,0 +1,69 @@
+import java.io.*;  
+import java.net.*;
+import java.util.Scanner;  
+/** 
+Represents a AssignTask.
+@author Ashokumar 3725744
+*/
+public class AssignTask {  
+    
+    /**
+     * AssignTask 
+     *      Currently this collects a single string, and sends it to a 
+     *      host and port that is running a TaskServer. By the end
+     *      of the lab it should collect iformation and send a Task object.
+     *      The default host of "localhost" can be altered by secifying a
+     *      hostname or IP address in the commandline as args[0]. The default
+     *      port of 61340 can also be altered by specifying it a 
+     *      command line argument (args[1]). Note that to specify a port, 
+     *      the hostname must also be specified.
+     * 
+     * Usage: $ java AssignTask <host> <port>
+     * 
+     * @param args
+     */
+        public static void main(String[] args) {  
+		// host name
+        String host = "localhost";
+		// port at specified IP address
+        int port = 61340;
+		// command for the AssignTask
+		// POST - sends the data to the server
+        String command = "POST";
+        
+        if(args.length > 0) host = args[0];
+        if(args.length == 2){
+            try{
+                port = Integer.parseInt(args[1]);
+            }
+            catch(Exception e){
+                System.err.println("Cannot use "+args[0]+ "as a port number. Using default 61340.");
+            }
+        }
+        Scanner sc = new Scanner(System.in);
+		System.out.print("Name: ");
+		String name = sc.nextLine();
+		System.out.print("Description: ");
+		String desc = sc.nextLine();
+		System.out.print("Due date: ");
+		String dueDate = sc.nextLine();
+		System.out.print("Contact: ");
+		String contact = sc.nextLine();
+        try{   
+			// creates an endpoint for communication for
+			// between the client/host and server.
+            Socket s=new Socket(host,port);  
+			// creates a writer for that socket
+            ObjectOutputStream oos=new ObjectOutputStream(s.getOutputStream()); 
+			// writes a command in the server
+            oos.writeObject(command);  
+            oos.writeObject(new Task(name,desc,dueDate,contact));  
+            oos.flush();  
+            oos.close();  
+            s.close();  
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }  
+    }  
+}  
